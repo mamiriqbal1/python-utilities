@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-digit = "2"
+digit = "4"
 algo1 = "RXCSi"
 run1 = "14"
 algo2 = "RXCSi"
-run2 = "19"
+run2 = "08"
 # algo2 = "XCSRCFC"
 # run2 = "01"
 

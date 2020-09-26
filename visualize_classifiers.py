@@ -2,8 +2,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 img_width = 28
-visualization_file_path = "../cmake-build-debug/remote/output/4digits_1/visualization.txt"
-image_file_path = "../data/mnist/mnist_test_3_8_5_6.txt"
+visualization_file_path = "../RCFC-kb/cmake-build-debug/output/output25/visualization.txt"
+image_file_path = "../RCFC-kb/data/mnist/mnist_validation_3_8.txt"
 cl_file_path = "../cmake-build-debug/remote/output/4digits_1/classifier.txt"
 cf_file_path = "../cmake-build-debug/remote/output/4digits_1/code_fragment.txt"
 
