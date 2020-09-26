@@ -59,9 +59,7 @@ def get_image(img_id):
     data = data.reshape(28, 28)
     return img_class, data
 
-img = get_image(0)
-img_l = get_blank_image(1)
-img_u = get_blank_image(0)
+
 
 filter_data = {}
 
@@ -102,7 +100,7 @@ load_filter_data()
 
 
 # update lower and upper bounds from filter
-def update_bounds(lb, ub, start_x, start_y, size, dilated):
+def update_bounds(img_l, img_u, lb, ub, start_x, start_y, size, dilated):
     step = 1
     if dilated:
         step = 2
@@ -110,13 +108,18 @@ def update_bounds(lb, ub, start_x, start_y, size, dilated):
 
     for y in range(size):
         for x in range(size):
-            if img_l[start_x+x*step, (start_y+y*step)] > lb[y*size + x]:
-                img_l[start_x+x*step, (start_y+y*step)] = lb[y*size + x]
-            if img_u[start_x+x*step, (start_y+y*step)] < ub[y*size + x]:
-                img_u[start_x+x*step, (start_y+y*step)] = ub[y*size + x]
+            img_l[start_x+x*step, (start_y+y*step)] = .4
+            img_u[start_x+x*step, (start_y+y*step)] = .6
+
+    # for y in range(size):
+    #     for x in range(size):
+    #         if img_l[start_x+x*step, (start_y+y*step)] > lb[y*size + x]:
+    #             img_l[start_x+x*step, (start_y+y*step)] = lb[y*size + x]
+    #         if img_u[start_x+x*step, (start_y+y*step)] < ub[y*size + x]:
+    #             img_u[start_x+x*step, (start_y+y*step)] = ub[y*size + x]
 
 
-def get_pixel_color(x,y):
+def get_pixel_color(img_l, img_u, x, y):
     color = (255, 0, 0)
     if img_l[x, y] == 1 and img_u[x, y] == 0:  # if the pixel interval has not be initialized then its don't care
         return color
@@ -138,10 +141,10 @@ def get_pixel_color(x,y):
     return color
 
 
-def visualize_intervals(dc):
+def visualize_intervals(img_l, img_u, dc):
     for y in range(img_width):
         for x in range(img_width):
-            dc.point((x, y), get_pixel_color(x,y))
+            dc.point((x, y), get_pixel_color(img_l, img_u, x,y))
 
 
 visualization_data = {}
@@ -189,6 +192,8 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
         if visualize_wrongly_classified and actual_class == predicted_class:
             continue
         print("image id: " + str(img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
+        img_l = get_blank_image(1)
+        img_u = get_blank_image(0)
         filters_drawn = 0
         for classifier in cl_clclass:
             if classifier[1] == predicted_class:
@@ -200,7 +205,7 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
                     for filter in filters:
                         filters_drawn += 1
                         lb, ub, x, y, size, dilated = filter_data[filter]
-                        update_bounds(lb, ub, x, y, size, dilated)
+                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
                         if rectangle:
                             shape = [(x, y), (x + size, y + size)]
                             dc.rectangle(shape, fill="#0000ff")
@@ -212,7 +217,7 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
 
         base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
         base_img.show()
-        visualize_intervals(dc_intervals)
+        visualize_intervals(img_l, img_u, dc_intervals)
         base_img_intervals = base_img_intervals.resize((img_width*resize_factor, img_width*resize_factor))
         base_img_intervals.show()
         print("filters drawn: "+str(filters_drawn))
