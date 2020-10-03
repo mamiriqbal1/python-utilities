@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 total_images = 1984
 img_width = 28
 resize_factor = 10
-base_path = '../remote/output/RXCSi/output-2-digit/2-digits-21/'
+base_path = '../remote/output/RXCSi/output-2-digit/2-digits-25/'
 image_file_path = "../RCFC-kb/data/mnist/mnist_validation_3_8.txt"
 visualization_file_path: str = base_path + 'visualization.txt'
 cl_file_path = base_path + '999800/classifier.txt'
@@ -18,12 +18,13 @@ line = f.readline()
 while line:
     tokens = line.strip().split()
     cl_id = int(tokens[1])
+    cl_fitness = float(tokens[9])
     line = f.readline()
     tokens = line.strip().split()
     cf = []
     for token in tokens:
         cf.append(int(token))
-    cl_cf[cl_id] = cf
+    cl_cf[cl_id] = (cl_fitness, cf)
     line = f.readline()
 f.close()
 
@@ -106,22 +107,24 @@ def update_bounds(img_l, img_u, lb, ub, start_x, start_y, size, dilated):
         step = 2
         effective_size = size + size - 1
 
-    for y in range(size):
-        for x in range(size):
-            img_l[start_x+x*step, (start_y+y*step)] = .4
-            img_u[start_x+x*step, (start_y+y*step)] = .6
-
     # for y in range(size):
     #     for x in range(size):
-    #         if img_l[start_x+x*step, (start_y+y*step)] > lb[y*size + x]:
-    #             img_l[start_x+x*step, (start_y+y*step)] = lb[y*size + x]
-    #         if img_u[start_x+x*step, (start_y+y*step)] < ub[y*size + x]:
-    #             img_u[start_x+x*step, (start_y+y*step)] = ub[y*size + x]
+    #         img_l[start_x+x*step, (start_y+y*step)] = .4
+    #         img_u[start_x+x*step, (start_y+y*step)] = .6
+
+    for y in range(size):
+        for x in range(size):
+            if img_l[start_x+x*step, (start_y+y*step)] > lb[y*size + x]:
+                img_l[start_x+x*step, (start_y+y*step)] = lb[y*size + x]
+            if img_u[start_x+x*step, (start_y+y*step)] < ub[y*size + x]:
+                img_u[start_x+x*step, (start_y+y*step)] = ub[y*size + x]
 
 
 def get_pixel_color(img_l, img_u, x, y):
     color = (255, 0, 0)
     if img_l[x, y] == 1 and img_u[x, y] == 0:  # if the pixel interval has not be initialized then its don't care
+        return color
+    if img_u[x, y] - img_l[x, y] > 0.5:  # wide interval means don't care
         return color
     # if img_l[x, y] < 0.25 and img_u[x, y] > 0.75:  # wide interval means don't care
     #     return color
@@ -199,7 +202,9 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
             if classifier[1] == predicted_class:
                 classifier_id = classifier[0]
                 # get classifier code fragments
-                code_fragments = cl_cf[classifier_id]
+                cl_fitness, code_fragments = cl_cf[classifier_id]
+                # if cl_fitness < .1:
+                #     continue
                 for cf in code_fragments:
                     filters = cf_filter[cf]  # filter
                     for filter in filters:
@@ -217,9 +222,9 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
 
         base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
         base_img.show()
-        visualize_intervals(img_l, img_u, dc_intervals)
-        base_img_intervals = base_img_intervals.resize((img_width*resize_factor, img_width*resize_factor))
-        base_img_intervals.show()
+        # visualize_intervals(img_l, img_u, dc_intervals)
+        # base_img_intervals = base_img_intervals.resize((img_width*resize_factor, img_width*resize_factor))
+        # base_img_intervals.show()
         print("filters drawn: "+str(filters_drawn))
         input("press any key to continue")
 

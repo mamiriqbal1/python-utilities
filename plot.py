@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-digit = "4"
+digit = "2"
 algo1 = "RXCSi"
-run1 = "14"
+run1 = "13"
 algo2 = "RXCSi"
-run2 = "08"
+run2 = "12"
 # algo2 = "XCSRCFC"
 # run2 = "01"
 
@@ -32,6 +32,7 @@ plt.plot(test_performance1[:, 0], test_performance1[:, 1], label=algo1 + ' ' + r
 plt.plot(test_performance2[:, 0], test_performance2[:, 1], label=algo2 + ' ' + run2 + ' Training')
 plt.title('Training Accuracy ' + title)
 plt.legend(loc='lower right')
+plt.ylim(0.5, 1)
 plt.savefig('plots/' + title + ' Training Accuracy' + '.png')
 plt.show()
 
@@ -40,6 +41,7 @@ plt.plot(test_performance1[:, 0], test_performance1[:, 4], label=algo1 + ' ' + r
 plt.plot(test_performance2[:, 0], test_performance2[:, 4], label=algo2 + ' ' + run2 + ' Validation')
 plt.title('Validation Accuracy ' + title)
 plt.legend(loc='lower right')
+plt.ylim(0.5, 1)
 plt.savefig('plots/' + title + ' Validation Accuracy' + '.png')
 plt.show()
 
