@@ -259,9 +259,11 @@ def invert_bounds(lb, ub, size):
     #         ub2[i] = 1
     return lb1, ub1, lb2, ub2
 
-def visualize_image(img_id, rectangle, visualize_wrongly_classified):
+def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit):
 
     for img_id in range(total_images):
+        if img_id_only != -1:
+            img_id = img_id_only
         img_class, img = get_image(img_id, True)
         original_image = Image.fromarray(img).convert("RGB")
         # base_img = Image.fromarray(get_blank_image(220)).convert("RGB")
@@ -270,6 +272,8 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
         base_img_intervals = Image.fromarray(img).convert("RGB")
         dc_intervals = ImageDraw.Draw(base_img_intervals)  # draw context
         actual_class, predicted_class, cl_ids = visualization_data[img_id]
+        if digit != -1 and actual_class != digit:
+            continue
         if visualize_wrongly_classified and actual_class == predicted_class:
             continue
         print("image id: " + str(img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
@@ -326,11 +330,13 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
         base_img_intervals.show()
         original_image = original_image.resize((img_width*resize_factor, img_width*resize_factor))
         original_image.show()
+        if img_id_only != -1:
+            exit(0)
         print("filters drawn: "+str(filters_drawn))
         input("press any key to continue")
 
 
-visualize_image(-1, True, False)
+visualize_image(-1, True, False, -1)
 
 
 
