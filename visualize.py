@@ -116,9 +116,9 @@ def update_bounds(img_l, img_u, lb, ub, start_x, start_y, size, dilated):
 
     for y in range(size):
         for x in range(size):
-            if img_l[start_x+x*step, (start_y+y*step)] > lb[y*size + x]:
+            if img_l[start_x+x*step, (start_y+y*step)] < lb[y*size + x]:
                 img_l[start_x+x*step, (start_y+y*step)] = lb[y*size + x]
-            if img_u[start_x+x*step, (start_y+y*step)] < ub[y*size + x]:
+            if img_u[start_x+x*step, (start_y+y*step)] > ub[y*size + x]:
                 img_u[start_x+x*step, (start_y+y*step)] = ub[y*size + x]
 
 
@@ -224,9 +224,9 @@ def filter_color(lb, ub, size, matched):
             return "#696969"
     else:
         if sum(lb) == 0:
-            return "#ff0000"
+            return "#ffffff"
         elif sum(ub) == size*size:
-            return "#00ff00"
+            return "#000000"
         else:
             return 0  #"#696969"  #"#ff0000"
 
@@ -273,8 +273,8 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
         if visualize_wrongly_classified and actual_class == predicted_class:
             continue
         print("image id: " + str(img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
-        img_l = get_blank_image(1)
-        img_u = get_blank_image(0)
+        img_l = get_blank_image(0)
+        img_u = get_blank_image(1)
         filters_drawn = 0
         img = img / 255  # normalize again for filter matching
         for cl_id in cl_ids:
