@@ -161,6 +161,7 @@ def visualize_image(img_id, rectangle):
         # try to match all filters
         img_l = get_blank_image(1)
         img_u = get_blank_image(0)
+        img = img / 255
         filters_drawn = 0
         for fid in filter_data:
             lb, ub, x, y, size, dilated = filter_data[fid]
@@ -168,7 +169,7 @@ def visualize_image(img_id, rectangle):
                 filters_drawn += 1
                 update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
                 if rectangle:
-                    shape = [(x, y), (x + size, y + size)]
+                    shape = [(x, y), (x + size-1, y + size-1)]
                     dc.rectangle(shape, fill="#0000ff")
                 else:
                     # center point

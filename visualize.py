@@ -51,12 +51,14 @@ def get_blank_image(val):
     data += val
     return data
 
-def get_image(img_id):
+
+def get_image(img_id, denormalize):
     item = img_file[img_id]
     img_class = int(item[-1])
     data = item[:-1]
     # denormalize
-    data = data * 255
+    if denormalize:
+        data = data * 255
     data = data.reshape(28, 28)
     return img_class, data
 
@@ -185,35 +187,85 @@ load_visualization_data()
 
 def match_filter_with_image(fid, image):
     lb, ub, x, y, size, dilated = filter_data[fid]
+
     img = image.reshape(784,)
     step = 1
     effective_filter_size = size
     if dilated:
         step = 2
         effective_filter_size = size + size -1;
-    match_failed = False # flag that controls if the next position to be evaluated when current does not match
-    i = y
-    j = x
-    k = 0
-    while k<size and not match_failed:
-        l = 0
-        while l<size and not match_failed:
-            if(img[i*img_width+j + k*step*img_width+l*step] < lb[k*size+l]
-               or img[i*img_width+j + k*step*img_width+l*step] > ub[k*size+l]):
+    match_failed = False  # flag that controls if the next position to be evaluated when current does not match
+    iy = y
+    ix = x
+    fy = 0
+    while fy < size and not match_failed:
+        fx = 0
+        while fx < size and not match_failed:
+            if(img[iy*img_width+ix + fy*step*img_width+fx*step] < lb[fy*size+fx]
+               or img[iy*img_width+ix + fy*step*img_width+fx*step] > ub[fy*size+fx]):
                 match_failed = True
-            l += 1
-        k += 1
+            fx += 1
+        fy += 1
     if not match_failed:
         return True
     return False
 
 
+def filter_color(lb, ub, size, matched):
+    if sum(lb) == 0 and sum(ub) == size * size:
+        assert matched
+        return 0  # don't care
+    if matched:
+        if sum(lb) == 0:
+            return "#000000"
+        elif sum(ub) == size*size:
+            return "#ffffff"
+        else:
+            return "#696969"
+    else:
+        if sum(lb) == 0:
+            return "#ff0000"
+        elif sum(ub) == size*size:
+            return "#00ff00"
+        else:
+            return 0  #"#696969"  #"#ff0000"
+
+
+def invert_bounds(lb, ub, size):
+    if sum(lb) == 0 and sum(ub) == size*size:
+        assert False
+    lb1 = 0
+    ub1 = 0
+    lb2 = ub2 = 0
+    if sum(lb) == 0:
+        lb1 = ub.copy()
+        ub1 = ub.copy()
+        for i in range(size*size):
+            ub1[i] = 1
+    elif sum(ub) == size*size:
+        ub1 = lb.copy()
+        lb1 = lb.copy()
+        for i in range(size*size):
+            lb1[i] = 0
+    # else:
+    #     lb1 = lb.copy()
+    #     for i in range(size*size):
+    #         lb1[i] = 0
+    #     ub1 = lb.copy()
+    #
+    #     lb2 = ub.copy()
+    #     ub2 = ub.copy()
+    #     for i in range(size*size):
+    #         ub2[i] = 1
+    return lb1, ub1, lb2, ub2
+
 def visualize_image(img_id, rectangle, visualize_wrongly_classified):
 
     for img_id in range(total_images):
-        img_class, img = get_image(img_id)
+        img_class, img = get_image(img_id, True)
         original_image = Image.fromarray(img).convert("RGB")
-        base_img = Image.fromarray(img).convert("RGB")
+        # base_img = Image.fromarray(get_blank_image(220)).convert("RGB")
+        base_img = Image.new("RGB", (img_width, img_width), "#00008B")
         dc = ImageDraw.Draw(base_img)  # draw context
         base_img_intervals = Image.fromarray(img).convert("RGB")
         dc_intervals = ImageDraw.Draw(base_img_intervals)  # draw context
@@ -224,6 +276,7 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
         img_l = get_blank_image(1)
         img_u = get_blank_image(0)
         filters_drawn = 0
+        img = img / 255  # normalize again for filter matching
         for cl_id in cl_ids:
             already_processed_filters = {}
             # get classifier code fragments
@@ -243,22 +296,27 @@ def visualize_image(img_id, rectangle, visualize_wrongly_classified):
                     #     continue
                     filters_drawn += 1
                     matched = match_filter_with_image(filter, img)
-                    # if not matched:
-                    update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
+                    if matched:
+                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
+                    else:
+                        lb1, ub1, lb2, ub2 = invert_bounds(lb, ub, size)
+                        if lb1 != 0 and ub1 != 0:
+                            update_bounds(img_l, img_u, lb1, ub1, x, y, size, dilated)
+                        if lb2 != 0 and ub2 != 0:
+                            update_bounds(img_l, img_u, lb2, ub2, x, y, size, dilated)
                     if dilated:
                         size = size * 2 - 1
-                    if matched:
-                        fill = "#32CD32"
-                    else:
-                        fill = "#ff0000"
-                    if rectangle:
-                        shape = [(x, y), (x + size, y + size)]
-                        dc.rectangle(shape, fill=fill)
-                    else:
-                        # center point
-                        x += size // 2
-                        y += size // 2
-                        dc.point((x, y), fill=fill)
+                    fill = filter_color(lb, ub, size, matched)
+                    if fill != 0:
+                        if rectangle:
+                            shape = [(x, y), (x + size-1, y + size-1)]
+                            dc.rectangle(shape, fill=fill)
+                        else:
+                            # center point
+                            x += size // 2
+                            y += size // 2
+                            dc.point((x, y), fill=fill)
+                    stop = 0
 
 
         base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
