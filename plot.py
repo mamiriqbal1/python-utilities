@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 digit = "10"
 algo1 = "RXCSi"
-run1 = "39"
+run1 = "47"
 max_pop1 = 35000
 algo2 = "XCSRCFC"
-run2 = "11"
-max_pop2 = 30000
+run2 = "12"
+max_pop2 = 40000
 
 
 

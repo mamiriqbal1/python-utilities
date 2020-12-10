@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 total_images = 1984
 img_width = 28
 resize_factor = 10
-base_path = '../remote/output/RXCSi/output-10-digit/10-digits-39/'
+base_path = '../remote/output/RXCSi/output-10-digit/10-digits-47/'
 image_file_path = "../RCFC-kb/data/mnist/mnist_validation_all.txt"
 visualization_file_path: str = base_path + 'visualization.txt'
 cl_file_path = base_path + '5000000/classifier.txt'
@@ -124,9 +124,9 @@ def update_bounds(img_l, img_u, lb, ub, start_x, start_y, size, dilated):
 
 def get_pixel_color(img_l, img_u, x, y):
     if img_l[x, y] == 1 and img_u[x, y] == 0:  # if the pixel interval has not be initialized then its don't care
-        return "#00008B"
+        return "#000000"
     if img_l[x, y] == 0 and img_u[x, y] == 1:  # if the pixel interval has max then its don't care
-        return "#00008B"  #"#006400"
+        return "#000000"  #"#006400"
     if img_l[x, y] == 0:  # this interval accepts black
         return "#000000"
     if img_u[x, y] == 1:  # this interval accepts white
