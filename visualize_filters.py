@@ -1,6 +1,8 @@
 import numpy as np
 from PIL import Image, ImageDraw
 
+# this is old file
+
 total_images = 1984
 img_width = 28
 resize_factor = 10

@@ -4,12 +4,12 @@ from PIL import Image, ImageDraw
 total_images = 1984
 img_width = 28
 resize_factor = 10
-base_path = '../remote/output/RXCSi/output-10-digit/10-digits-47/'
+base_path = '../remote/output/RXCSi/output-10-digit/10-digits-07/'
 image_file_path = "../RCFC-kb/data/mnist/mnist_validation_all.txt"
 visualization_file_path: str = base_path + 'visualization.txt'
-cl_file_path = base_path + '5000000/classifier.txt'
-cf_file_path = base_path + '5000000/code_fragment.txt'
-filter_file_path = base_path + '5000000/filter.txt'
+cl_file_path = base_path + '3500000/classifier.txt'
+cf_file_path = base_path + '3500000/code_fragment.txt'
+filter_file_path = base_path + '3500000/filter.txt'
 
 # load classifiers ids and their code fragment ids
 cl_cf = {}
@@ -323,20 +323,20 @@ def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit)
                     stop = 0
 
 
-        base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
-        base_img.show()
+        # base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
+        # base_img.show()
+        original_image = original_image.resize((img_width*resize_factor, img_width*resize_factor))
+        original_image.show()
         visualize_intervals(img_l, img_u, dc_intervals)
         base_img_intervals = base_img_intervals.resize((img_width*resize_factor, img_width*resize_factor))
         base_img_intervals.show()
-        original_image = original_image.resize((img_width*resize_factor, img_width*resize_factor))
-        original_image.show()
         if img_id_only != -1:
             exit(0)
         print("filters drawn: "+str(filters_drawn))
         input("press any key to continue")
 
 
-visualize_image(-1, True, False, -1)
+visualize_image(-1, True, False, 9)
 
 
 
