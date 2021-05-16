@@ -204,8 +204,9 @@ def invert_bounds_location(lb, ub):
         ub = lb
         lb = 0
     else:  # lb > 0 and ub < 1:
-        # do nothing
-        x = 0
+        # make it "not initialized"
+        lb = -1
+        ub = 2
     return lb, ub
 
 def invert_bounds(lb, ub, size):
