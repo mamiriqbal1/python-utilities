@@ -5,8 +5,8 @@ total_images = 1984
 img_width = 28
 resize_factor = 10
 base_path = '../XCS-IMG/cmake-build-debug/output-10-digit/10-digits-11/'
-image_file_path = "../XCS-IMG/data/mnist/mnist_test_all.txt"
-visualization_file_path: str = base_path + 'visualization.txt'
+image_file_path = "../XCS-IMG/data/mnist/mnist_validation_all.txt"
+visualization_file_path: str = base_path + 'visualization_validation.txt'
 filter_file_path = base_path + '3350000/filter.txt'
 
 
@@ -91,17 +91,19 @@ def update_bounds(img_l, img_u, lb, ub, start_x, start_y, size, dilated):
 
 def get_pixel_color(img_l, img_u, x, y, lower):
     if img_l[x, y] == -1 and img_u[x, y] == 2:  # if the pixel interval has not be initialized then its don't care
-        return "#0000ff"
+        return "#000000"  # "#7DCEA0"  # "#0000ff"
     if img_l[x, y] == 0 and img_u[x, y] == 1:  # if the pixel interval has max then its don't care
-        return "#ff0000"  #"#006400"
-    # if img_l[x, y] == 0:  # this interval accepts black
-    #     return "#000000"
-    # if img_u[x, y] == 1:  # this interval accepts white
-    #     return "#ffffff"
+        return "#000000"  # "#7DCEA0"  #ff0000"  #"#006400"
+    if img_l[x, y] == 0:  # this interval accepts black
+        return "#000000"
+    if img_u[x, y] == 1:  # this interval accepts white
+        return "#ffffff"
     # if img_u[x, y] - img_l[x, y] > 0.5:  # wide interval means don't care
     #     return color
     # if img_l[x, y] < 0.25 and img_u[x, y] > 0.75:  # wide interval means don't care
     #     return color
+
+    return "#D35400"
 
     mid = (img_l[x,y] + img_u[x,y]) / 2
     # if lower is true then return lower bound otherwise upper bound
@@ -275,6 +277,8 @@ def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit)
         for filter_pair in all_filters:
             filter = filter_pair[0]
             location = filter_pair[1]
+            # if location == -1:  # process only negative filters
+            #     continue
             if filter in already_processed_filters:
                 continue
             already_processed_filters[filter] = 1
