@@ -5,8 +5,8 @@ total_images = 1984
 img_width = 28
 resize_factor = 10
 base_path = '../XCS-IMG/cmake-build-debug/output-10-digit/10-digits-11/'
-image_file_path = "../XCS-IMG/data/mnist/mnist_validation_all.txt"
-visualization_file_path: str = base_path + 'visualization_validation.txt'
+image_file_path = "../XCS-IMG/data/mnist/mnist_train_all.txt"
+visualization_file_path: str = base_path + 'visualization_train.txt'
 filter_file_path = base_path + '3350000/filter.txt'
 
 
@@ -103,18 +103,20 @@ def get_pixel_color(img_l, img_u, x, y, lower):
     # if img_l[x, y] < 0.25 and img_u[x, y] > 0.75:  # wide interval means don't care
     #     return color
 
-    return "#D35400"
+    if lower:
+        return "#BFBFBF"  # "#D35400"
+
+    # if lower is true then return lower bound otherwise upper bound
+    # if lower:
+    #     mid = img_l[x,y]
+    #     if mid == 0:
+    #         return "#00ff00"
+    # else:
+    #     mid = img_u[x,y]
+    #     if mid == 1:
+    #         return "#00ff00"
 
     mid = (img_l[x,y] + img_u[x,y]) / 2
-    # if lower is true then return lower bound otherwise upper bound
-    if lower:
-        mid = img_l[x,y]
-        if mid == 0:
-            return "#00ff00"
-    else:
-        mid = img_u[x,y]
-        if mid == 1:
-            return "#00ff00"
     # real to 255 scale
     c = int(mid*255)
     color = (c, c, c)
@@ -338,7 +340,7 @@ def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit)
         input("press any key to continue")
 
 
-visualize_image(-1, True, False, -1)
+visualize_image(-1, True, True, -1)
 
 
 
