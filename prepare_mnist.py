@@ -56,21 +56,22 @@ def prepare_mnist_digits(out_path, digits, postfix):
     x_train, x_validation, y_train, y_validation = train_test_split(x_train, y_train, test_size=y_test.size)
 
     # normalize between 0 and 1
-    # x_train = (x_train - x_train.min()) / (x_train.max() - x_train.min())
-    # x_validation = (x_validation - x_validation.min()) / (x_validation.max() - x_validation.min())
-    # x_test = (x_test - x_test.min()) / (x_test.max() - x_test.min())
+    x_train = (x_train - x_train.min()) / (x_train.max() - x_train.min())
+    x_validation = (x_validation - x_validation.min()) / (x_validation.max() - x_validation.min())
+    x_test = (x_test - x_test.min()) / (x_test.max() - x_test.min())
 
 
-    np.savetxt(out_path + 'mnist_train' + postfix + '_integer.txt', np.hstack((x_train, np.reshape(y_train, (-1, 1)))), fmt='%1d')
-    np.savetxt(out_path + 'mnist_validation' + postfix + '_integer.txt', np.hstack((x_validation, np.reshape(y_validation, (-1, 1)))), fmt='%1d')
-    np.savetxt(out_path + 'mnist_test' + postfix + '_integer.txt', np.hstack((x_test, np.reshape(y_test, (-1, 1)))), fmt='%1d')
+    np.savetxt(out_path + 'mnist_train' + postfix + '.txt', np.hstack((x_train, np.reshape(y_train, (-1, 1)))))
+    np.savetxt(out_path + 'mnist_validation' + postfix + '.txt', np.hstack((x_validation, np.reshape(y_validation, (-1, 1)))))
+    np.savetxt(out_path + 'mnist_test' + postfix + '.txt', np.hstack((x_test, np.reshape(y_test, (-1, 1)))))
 
 
-prepare_mnist_digits('../data/mnist/', [3, 8], '_3_8')
-prepare_mnist_digits('../data/mnist/', [3, 8, 5, 6], '_3_8_5_6')
-# prepare_mnist_digits('../data/mnist/', [3, 8, 5, 6, 1, 2, 4, 7], '_3_8_5_6_1_2_4_7')
-prepare_mnist_all('../data/mnist/')
+# prepare_mnist_digits('../data/mnist/', [0, 6], '_0_6')
+# prepare_mnist_digits('../data/mnist/', [3, 8], '_3_8')
+# prepare_mnist_digits('../data/mnist/', [3, 8, 5, 6], '_3_8_5_6')
+# prepare_mnist_digits('../data/mnist/', [1, 2, 4, 7, 9, 0], '_1_2_4_7_9_0')
+# prepare_mnist_all('../data/mnist/')
 
 #prepare_mnist_3_8('../data/mnist/')
 
-#repare_mnist_all('../data/mnist/')
+prepare_mnist_all('../data/mnist/')

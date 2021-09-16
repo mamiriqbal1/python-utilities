@@ -22,8 +22,8 @@ test_performance2 = np.loadtxt("../remote/output/" + algo2 + "/output-" +digit +
 test_performance2_sd = np.loadtxt("../remote/output/" + algo2 + "/output-" +digit + "-digit/" + "summary/" + algo2 + "-" + digit + "-01-30-validation_performance_sd.txt")
 
 title = 'Average Training Accuracy for ' + digit + ' digits'
-plt.errorbar(test_performance1[:, 0], test_performance1[:, 1], yerr=test_performance1_sd[:, 1], label=algo1_label)
-plt.errorbar(test_performance2[:, 0], test_performance2[:, 1], yerr=test_performance2_sd[:, 1], label=algo2)
+plt.errorbar(test_performance1[:, 0], test_performance1[:, 1], yerr=test_performance1_sd[:, 1], label=algo1_label, color='k', linestyle='solid')
+plt.errorbar(test_performance2[:, 0], test_performance2[:, 1], yerr=test_performance2_sd[:, 1], label=algo2, color='0.5', linestyle='solid')
 plt.title(title)
 plt.legend(loc='lower right')
 plt.ylim(0.8, 1)
@@ -33,8 +33,8 @@ plt.savefig('plots/' + title + '.png')
 plt.show()
 
 title = 'Average Validation Accuracy for ' + digit + ' digits'
-plt.errorbar(test_performance1[:, 0], test_performance1[:, 4], yerr=test_performance1_sd[:, 4], label=algo1_label)
-plt.errorbar(test_performance2[:, 0], test_performance2[:, 4], yerr=test_performance2_sd[:, 4], label=algo2)
+plt.errorbar(test_performance1[:, 0], test_performance1[:, 4], yerr=test_performance1_sd[:, 4], label=algo1_label, color='k', linestyle='solid')
+plt.errorbar(test_performance2[:, 0], test_performance2[:, 4], yerr=test_performance2_sd[:, 4], label=algo2, color='0.5', linestyle='solid')
 plt.title(title)
 plt.legend(loc='lower right')
 plt.ylim(0.8, 1)

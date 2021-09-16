@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-digit = "10"
+digit = "2"
 algo = "RXCSi"
 run_start = 1
 run_end = 30

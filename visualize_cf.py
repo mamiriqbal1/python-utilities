@@ -8,10 +8,13 @@ resize_factor = 10
 # image_file_path = "../XCS-IMG/data/mnist/mnist_validation_0_6.txt"
 # visualization_file_path: str = base_path + 'visualization.txt'
 # filter_file_path = base_path + '940785/filter.txt'
-base_path = '../XCS-IMG/cmake-build-debug/output-10-digit/10-digits-11/'
+base_path = '../XCS-IMG/cmake-build-debug/output-10-digit/10-digits-09/'
+iteration_number = '4900000'
 image_file_path = "../XCS-IMG/data/mnist/mnist_validation_all.txt"
-visualization_file_path: str = base_path + 'visualization_validation.txt'
-filter_file_path = base_path + '3350000/filter.txt'
+visualization_file_path: str = base_path + 'visualization.txt'
+filter_file_path = base_path + iteration_number + '/filter.txt'
+cf_file_path = base_path + iteration_number + '/code_fragment.txt'
+cl_file_path = base_path + iteration_number + '/classifier.txt'
 
 
 img_file = np.loadtxt(image_file_path)
@@ -34,13 +37,56 @@ def get_image(img_id, denormalize):
     return img_class, data
 
 
+cl_data = {}
+
+def load_cl_data():
+    f = open(cl_file_path)
+    line = f.readline()
+    while line:
+        tokens = line.strip().split()
+        cl_id = int(tokens[1])
+        line = f.readline()
+        tokens = line.strip().split()
+        cf_list = []
+        for item in tokens:
+            id = int(item)
+            if id != -1:
+                cf_list.append(id)
+        cl_data[cl_id] = cf_list
+        line = f.readline()
+
+
+load_cl_data()
+
+
+cf_data = {}
+def load_cf_data():
+    f = open(cf_file_path)
+    line = f.readline()
+    while line:
+        tokens = line.strip().split()
+        cf_id = int(tokens[0])
+        cf_num = int(tokens[1])
+        cf_fit = int(tokens[2])
+        cf_x = int(tokens[3])
+        cf_y = int(tokens[4])
+        cf_size = int(tokens[5])
+        filter_attributes = {}
+        for i in range(6, len(tokens)):
+            item = tokens[i];
+            if(item.startswith("D")):
+                filter_id = int(item[1:])
+                filter_x = int(tokens[i+1])
+                filter_y = int(tokens[i+2])
+                filter_attributes[filter_id] = filter_x, filter_y
+        line = f.readline()
+        cf_data[cf_id] = (cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes)
+
+load_cf_data()
 
 filter_data = {}
-
 def load_filter_data():
     f_id = -1
-    x = -1
-    y = -1
     size = -1
     dilated = False
     f = open(filter_file_path)
@@ -48,10 +94,8 @@ def load_filter_data():
     while line:
         tokens = line.strip().split()
         f_id = int(tokens[1])
-        x = int(tokens[3])
-        y = int(tokens[5])
-        size = int(tokens[7])
-        dilated = bool(int(tokens[9]))
+        size = int(tokens[3])
+        dilated = bool(int(tokens[5]))
         line = f.readline()
         tokens = line.strip().split()
         lb = []
@@ -67,7 +111,7 @@ def load_filter_data():
                 continue
             ub.append(float(tokens[i]))
         line = f.readline()
-        filter_data[f_id] = (lb, ub, x, y, size, dilated)
+        filter_data[f_id] = (lb, ub, size, dilated)
 
 
 load_filter_data()
@@ -158,9 +202,14 @@ def load_visualization_data():
         # print("image id: " + str(read_img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
         line = f.readline()  # classifier_id predicted_class ...
         tokens = line.strip().split()
-        all_filters = []
+        all_cl = []
         for id in tokens:
-            all_filters.append((int(id), -1))
+            all_cl.append(int(id))
+        line = f.readline()  # classifier_id predicted_class ...
+        tokens = line.strip().split()
+        all_filters = {}
+        for id in tokens:
+            all_filters[int(id)] = -1
         line = f.readline()  # classifier_id predicted_class ...
         tokens = line.strip().split()
         # every id is followed by location where filter did not match
@@ -174,8 +223,8 @@ def load_visualization_data():
             else:
                 location = int(item)
                 is_id = True
-                all_filters.append((id, location))
-        visualization_data[read_img_id] = (actual_class, predicted_class, all_filters)
+                all_filters[id] = location
+        visualization_data[read_img_id] = (actual_class, predicted_class, all_filters, all_cl)
         line = f.readline()  # classifier_id predicted_class ...
     f.close()
 
@@ -253,7 +302,7 @@ def get_concat_h(im1, im2):
     return dst
 
 
-def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit):
+def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit, cf_id_only):
 
     for img_id in range(total_images):
         if img_id_only != -1:
@@ -267,7 +316,7 @@ def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit)
         dc_intervals_lower = ImageDraw.Draw(base_img_intervals_lower)  # draw context
         base_img_intervals_upper = Image.fromarray(img).convert("RGB")
         dc_intervals_upper = ImageDraw.Draw(base_img_intervals_upper)  # draw context
-        actual_class, predicted_class, all_filters = visualization_data[img_id]
+        actual_class, predicted_class, all_filters, all_cl = visualization_data[img_id]
         if digit != -1 and actual_class != digit:
             continue
         if visualize_wrongly_classified and actual_class == predicted_class:
@@ -278,73 +327,87 @@ def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit)
         img_u = get_blank_image(2)
         filters_drawn = 0
         img = img / 255  # normalize again for filter matching
-
+        cf_found = False
         already_processed_filters = {}
-        for filter_pair in all_filters:
-            filter = filter_pair[0]
-            location = filter_pair[1]
-            # if location == -1:  # process only negative filters
-            #     continue
-            if filter in already_processed_filters:
-                continue
-            already_processed_filters[filter] = 1
-            lbf, ubf, x, y, size, dilated = filter_data[filter]
-            lb = lbf.copy()
-            ub = ubf.copy()
-            # if dilated:
-            #     continue
-            filters_drawn += 1
-            matched = location == -1
-            if matched:
-                update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
-            else:
-                # since matched failed due to only one location, just invert single interval
-                lb_location, ub_location = invert_bounds_location(lb[location], ub[location])
-                # now update the filter lb and ub accordingly
-                # all the intervals before the location stays the same
-                # interval a location is inverted
-                lb[location] = lb_location
-                ub[location] = ub_location
-                # all the intervals after the location are don't care
-                for i in range(location+1, size*size):
-                    lb[i] = -1
-                    ub[i] = 2
-                update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
-            if dilated:
-                size = size * 2 - 1
-            fill = filter_color(lb, ub, size, matched)
-            if fill != 0:
-                if rectangle:
-                    shape = [(x, y), (x + size-1, y + size-1)]
-                    dc.rectangle(shape, fill=fill)
+        for cl_item in all_cl:
+            for cf in cl_data[cl_item]:
+                if cf_id_only != -1 and cf != cf_id_only:
+                    continue
                 else:
-                    # center point
-                    x += size // 2
-                    y += size // 2
-                    dc.point((x, y), fill=fill)
-            stop = 0
+                    cf_found = True
+                cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes = cf_data[cf]
+                for filter_item in filter_attributes:
+                    filter = filter_item
+                    if filter not in all_filters:
+                        continue
+                    location = all_filters[filter]
+                    x = cf_x + filter_attributes[filter][0]
+                    y = cf_y + filter_attributes[filter][1]
 
+                    # if location == -1:  # process only negative filters
+                    #     continue
+                    if filter in already_processed_filters:
+                        continue
+                    already_processed_filters[filter] = 1
+                    lbf, ubf, size, dilated = filter_data[filter]
+                    lb = lbf.copy()
+                    ub = ubf.copy()
+                    # if dilated:
+                    #     continue
+                    filters_drawn += 1
+                    matched = location == -1
+                    if matched:
+                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
+                    else:
+                        # since matched failed due to only one location, just invert single interval
+                        lb_location, ub_location = invert_bounds_location(lb[location], ub[location])
+                        # now update the filter lb and ub accordingly
+                        # all the intervals before the location stays the same
+                        # interval a location is inverted
+                        lb[location] = lb_location
+                        ub[location] = ub_location
+                        # all the intervals after the location are don't care
+                        for i in range(location+1, size*size):
+                            lb[i] = -1
+                            ub[i] = 2
+                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
+                    if dilated:
+                        size = size * 2 - 1
+                    fill = filter_color(lb, ub, size, matched)
+                    if fill != 0:
+                        if rectangle:
+                            shape = [(x, y), (x + size-1, y + size-1)]
+                            dc.rectangle(shape, fill=fill)
+                        else:
+                            # center point
+                            x += size // 2
+                            y += size // 2
+                            dc.point((x, y), fill=fill)
+                    stop = 0
 
+        if not cf_found:
+            continue
         # base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
         # base_img.show()
         original_image = original_image.resize((img_width*resize_factor, img_width*resize_factor))
-        original_image.show()
+        # original_image.show()
         # visualize_intervals(img_l, img_u, dc_intervals_lower, True)
         # base_img_intervals_lower = base_img_intervals_lower.resize((img_width*resize_factor, img_width*resize_factor))
         # base_img_intervals_lower.show()
         visualize_intervals(img_l, img_u, dc_intervals_upper, False)
         base_img_intervals_upper = base_img_intervals_upper.resize((img_width*resize_factor, img_width*resize_factor))
-        base_img_intervals_upper.show()
+        # base_img_intervals_upper.show()
         # all_img = get_concat_h(original_image, base_img_intervals_lower)
+        all_img = get_concat_h(original_image, base_img_intervals_upper)
         # all_img = get_concat_h(all_img, base_img_intervals_upper)
-        # all_img.show()
+        all_img.show()
         if img_id_only != -1:
             exit(0)
         print("filters drawn: "+str(filters_drawn))
         input("press any key to continue")
 
 
-visualize_image(-1, True, False, 9)
+visualize_image(img_id_only=-1, rectangle=True, visualize_wrongly_classified=False, digit=-1, cf_id_only=88966)
 
 
 
