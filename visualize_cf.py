@@ -8,8 +8,8 @@ resize_factor = 10
 # image_file_path = "../XCS-IMG/data/mnist/mnist_validation_0_6.txt"
 # visualization_file_path: str = base_path + 'visualization.txt'
 # filter_file_path = base_path + '940785/filter.txt'
-base_path = '../XCS-IMG/cmake-build-debug/output-10-digit/10-digits-09/'
-iteration_number = '4900000'
+base_path = '../XCS-IMG/cmake-build-debug/output-4-digit/4-digits-18/'
+iteration_number = '1636908'
 image_file_path = "../XCS-IMG/data/mnist/mnist_validation_all.txt"
 visualization_file_path: str = base_path + 'visualization.txt'
 filter_file_path = base_path + iteration_number + '/filter.txt'
@@ -80,9 +80,12 @@ def load_cf_data():
                 filter_y = int(tokens[i+2])
                 filter_attributes[filter_id] = filter_x, filter_y
         line = f.readline()
-        cf_data[cf_id] = (cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes)
+        cf_data[cf_id] = (cf_id, cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes)
 
 load_cf_data()
+cf_data_sorted = sorted(list(cf_data.values()), key=lambda tup: tup[2], reverse=True)
+cf_data_sorted = np.array(cf_data_sorted)
+
 
 filter_data = {}
 def load_filter_data():
@@ -142,6 +145,13 @@ def get_pixel_color(img_l, img_u, x, y, lower):
         return "#000000"  # "#7DCEA0"  # "#0000ff"
     if img_l[x, y] == 0 and img_u[x, y] == 1:  # if the pixel interval has max then its don't care
         return "#000000"  # "#7DCEA0"  #ff0000"  #"#006400"
+
+    mid = (img_l[x,y] + img_u[x,y]) / 2
+    # real to 255 scale
+    c = int(mid*255)
+    color = (c, c, c)
+    return color
+
     if img_l[x, y] == 0:  # this interval accepts black (non-white, or grey to black)
         return "#000000"
     if img_u[x, y] == 1:  # this interval accepts white (non-black, or grey to  white)
@@ -164,135 +174,12 @@ def get_pixel_color(img_l, img_u, x, y, lower):
     #     if mid == 1:
     #         return "#00ff00"
 
-    mid = (img_l[x,y] + img_u[x,y]) / 2
-    # real to 255 scale
-    c = int(mid*255)
-    color = (c, c, c)
-
-    # color = "ff0000"
-    # if mid < 0.25:
-    #     color = "000000"  # black
-    # elif mid < 0.5:
-    #     color = "D3D3D3"  # light grey
-
-    return color
 
 
 def visualize_intervals(img_l, img_u, dc, lower):
     for y in range(img_width):
         for x in range(img_width):
             dc.point((x, y), get_pixel_color(img_l, img_u, x,y, lower))
-
-
-visualization_data = {}
-
-
-def load_visualization_data():
-    # load visualization data
-    actual_class = -1
-    predicted_class = -1
-    f = open(visualization_file_path)
-    line = f.readline()
-    while line:
-        cl_clclass = []
-        tokens = line.strip().split()
-        read_img_id = int(tokens[0])
-        actual_class = int(tokens[1])
-        predicted_class = int(tokens[2])
-        # print("image id: " + str(read_img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
-        line = f.readline()  # classifier_id predicted_class ...
-        tokens = line.strip().split()
-        all_cl = []
-        for id in tokens:
-            all_cl.append(int(id))
-        line = f.readline()  # classifier_id predicted_class ...
-        tokens = line.strip().split()
-        all_filters = {}
-        for id in tokens:
-            all_filters[int(id)] = -1
-        line = f.readline()  # classifier_id predicted_class ...
-        tokens = line.strip().split()
-        # every id is followed by location where filter did not match
-        is_id = True
-        id = -1
-        location = -1
-        for item in tokens:
-            if is_id:
-                id = int(item)
-                is_id = False
-            else:
-                location = int(item)
-                is_id = True
-                all_filters[id] = location
-        visualization_data[read_img_id] = (actual_class, predicted_class, all_filters, all_cl)
-        line = f.readline()  # classifier_id predicted_class ...
-    f.close()
-
-
-load_visualization_data()
-
-
-def filter_color(lb, ub, size, matched):
-    if sum(lb) == 0 and sum(ub) == size * size:
-        # assert matched
-        return 0  # don't care
-    if matched:
-        if sum(lb) == 0:
-            return "#000000"
-        elif sum(ub) == size*size:
-            return "#ffffff"
-        else:
-            return "#696969"
-    else:
-        if sum(lb) == 0:
-            return "#ffffff"
-        elif sum(ub) == size*size:
-            return "#000000"
-        else:
-            return 0  #"#696969"  #"#ff0000"
-
-
-# invert single interval
-def invert_bounds_location(lb, ub):
-    if lb == 0:
-        lb = ub
-        ub = 1
-    elif ub == 1:
-        ub = lb
-        lb = 0
-    else:  # lb > 0 and ub < 1:
-        # make it "not initialized"
-        lb = -1
-        ub = 2
-    return lb, ub
-
-def invert_bounds(lb, ub, size):
-    if sum(lb) == 0 and sum(ub) == size*size:
-        assert False
-    lb1 = 0
-    ub1 = 0
-    lb2 = ub2 = 0
-    if sum(lb) == 0:
-        lb1 = ub.copy()
-        ub1 = ub.copy()
-        for i in range(size*size):
-            ub1[i] = 1
-    elif sum(ub) == size*size:
-        ub1 = lb.copy()
-        lb1 = lb.copy()
-        for i in range(size*size):
-            lb1[i] = 0
-    # else:
-    #     lb1 = lb.copy()
-    #     for i in range(size*size):
-    #         lb1[i] = 0
-    #     ub1 = lb.copy()
-    #
-    #     lb2 = ub.copy()
-    #     ub2 = ub.copy()
-    #     for i in range(size*size):
-    #         ub2[i] = 1
-    return lb1, ub1, lb2, ub2
 
 
 def get_concat_h(im1, im2):
@@ -302,115 +189,33 @@ def get_concat_h(im1, im2):
     return dst
 
 
-def visualize_image(img_id_only, rectangle, visualize_wrongly_classified, digit, cf_id_only):
-
-    for img_id in range(total_images):
-        if img_id_only != -1:
-            img_id = img_id_only
-        img_class, img = get_image(img_id, True)
-        original_image = Image.fromarray(img).convert("RGB")
-        # base_img = Image.fromarray(get_blank_image(220)).convert("RGB")
-        base_img = Image.new("RGB", (img_width, img_width), "#00008B")
-        dc = ImageDraw.Draw(base_img)  # draw context
-        base_img_intervals_lower = Image.fromarray(img).convert("RGB")
-        dc_intervals_lower = ImageDraw.Draw(base_img_intervals_lower)  # draw context
-        base_img_intervals_upper = Image.fromarray(img).convert("RGB")
-        dc_intervals_upper = ImageDraw.Draw(base_img_intervals_upper)  # draw context
-        actual_class, predicted_class, all_filters, all_cl = visualization_data[img_id]
-        if digit != -1 and actual_class != digit:
-            continue
-        if visualize_wrongly_classified and actual_class == predicted_class:
-            continue
-        print("image id: " + str(img_id) + " actual class: " + str(actual_class) + " predicted class: " + str(predicted_class))
+def visualize_cf():
+    for cl_id in cl_data.keys():
         # initialize bounds to see if they are updated lower = 1, upper = 0
         img_l = get_blank_image(-1)
         img_u = get_blank_image(2)
-        filters_drawn = 0
-        img = img / 255  # normalize again for filter matching
-        cf_found = False
-        already_processed_filters = {}
-        for cl_item in all_cl:
-            for cf in cl_data[cl_item]:
-                if cf_id_only != -1 and cf != cf_id_only:
-                    continue
-                else:
-                    cf_found = True
-                cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes = cf_data[cf]
-                for filter_item in filter_attributes:
-                    filter = filter_item
-                    if filter not in all_filters:
-                        continue
-                    location = all_filters[filter]
-                    x = cf_x + filter_attributes[filter][0]
-                    y = cf_y + filter_attributes[filter][1]
+        base_img = Image.new("RGB", (img_width, img_width), "#000000")
+        dc = ImageDraw.Draw(base_img)  # draw context
+        for cf_id in cl_data[cl_id]:
+            # for cf in cf_data_sorted[:, 0]:
+            #     cf_id = int(cf)
 
-                    # if location == -1:  # process only negative filters
-                    #     continue
-                    if filter in already_processed_filters:
-                        continue
-                    already_processed_filters[filter] = 1
-                    lbf, ubf, size, dilated = filter_data[filter]
-                    lb = lbf.copy()
-                    ub = ubf.copy()
-                    # if dilated:
-                    #     continue
-                    filters_drawn += 1
-                    matched = location == -1
-                    if matched:
-                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
-                    else:
-                        # since matched failed due to only one location, just invert single interval
-                        lb_location, ub_location = invert_bounds_location(lb[location], ub[location])
-                        # now update the filter lb and ub accordingly
-                        # all the intervals before the location stays the same
-                        # interval a location is inverted
-                        lb[location] = lb_location
-                        ub[location] = ub_location
-                        # all the intervals after the location are don't care
-                        for i in range(location+1, size*size):
-                            lb[i] = -1
-                            ub[i] = 2
-                        update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
-                    if dilated:
-                        size = size * 2 - 1
-                    fill = filter_color(lb, ub, size, matched)
-                    if fill != 0:
-                        if rectangle:
-                            shape = [(x, y), (x + size-1, y + size-1)]
-                            dc.rectangle(shape, fill=fill)
-                        else:
-                            # center point
-                            x += size // 2
-                            y += size // 2
-                            dc.point((x, y), fill=fill)
-                    stop = 0
+            cf_id, cf_num, cf_fit, cf_x, cf_y, cf_size, filter_attributes = cf_data[cf_id]
+            for filter_item in filter_attributes:
+                filter = filter_item
+                x = cf_x + filter_attributes[filter][0]
+                y = cf_y + filter_attributes[filter][1]
+                lbf, ubf, size, dilated = filter_data[filter]
+                lb = lbf.copy()
+                ub = ubf.copy()
+                update_bounds(img_l, img_u, lb, ub, x, y, size, dilated)
 
-        if not cf_found:
-            continue
-        # base_img = base_img.resize((img_width*resize_factor, img_width*resize_factor))
-        # base_img.show()
-        original_image = original_image.resize((img_width*resize_factor, img_width*resize_factor))
-        # original_image.show()
-        # visualize_intervals(img_l, img_u, dc_intervals_lower, True)
-        # base_img_intervals_lower = base_img_intervals_lower.resize((img_width*resize_factor, img_width*resize_factor))
-        # base_img_intervals_lower.show()
-        visualize_intervals(img_l, img_u, dc_intervals_upper, False)
-        base_img_intervals_upper = base_img_intervals_upper.resize((img_width*resize_factor, img_width*resize_factor))
-        # base_img_intervals_upper.show()
-        # all_img = get_concat_h(original_image, base_img_intervals_lower)
-        all_img = get_concat_h(original_image, base_img_intervals_upper)
-        # all_img = get_concat_h(all_img, base_img_intervals_upper)
-        all_img.show()
-        if img_id_only != -1:
-            exit(0)
-        print("filters drawn: "+str(filters_drawn))
+        visualize_intervals(img_l, img_u, dc, False)
+        base_img = base_img.resize((img_width * resize_factor, img_width * resize_factor))
+        base_img.show()
         input("press any key to continue")
 
-
-visualize_image(img_id_only=-1, rectangle=True, visualize_wrongly_classified=False, digit=-1, cf_id_only=88966)
-
-
-
+visualize_cf()
 
 
 print('done')
