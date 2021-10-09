@@ -112,8 +112,8 @@ def update_bounds(img, values, start_x, start_y, size_x, size_y, dilated):
 
 
 def get_pixel_color(img, x, y):
-    if img[y, x] == -1 and img[y, x] == 2:  # if the pixel interval has not be initialized then its don't care
-        return "#7DCEA0"  # "#0000ff"
+    if img[y, x] == -1:  # if the pixel interval has not be initialized then its don't care
+        return '#FF0000'  # "#7DCEA0"  # "#0000ff"
     c = int(img[y, x]*255)
     color = (c, c, c)
     return color
@@ -156,11 +156,11 @@ def visualize_cf(cf_id_list):
     input("press any key to continue")
 
 
-def visualize_cl(cl_id):
+def visualize_cl(cl_id_list):
     cf_id_list = []
-    for cf_id in cl_data[cl_id]:
-        cf_id_list.append(cf_id)
-
+    for cl_id in cl_id_list:
+        for cf_id in cl_data[cl_id][8]:
+            cf_id_list.append(cf_id)
     visualize_cf(cf_id_list)
 
 
@@ -174,13 +174,21 @@ def visualize_promising_cl():
     for cl in cl_data_sorted[:, 0:2]:
         cl_id = int(cl[0])
         print("Classifier: " + str(cl_id) + " Class: " + str(cl[1]))
-        cf_id_list = []
-        for cf_id in cl_data[cl_id][8]:
-            cf_id_list.append(cf_id)
-        visualize_cf(cf_id_list)
+        visualize_cl([cl_id])
 
 
-visualize_promisinng_cf()
+def visualize_all_cl(action):
+    print('Visualizing all classifiers for action: ' + str(action))
+    cl_id_list = []
+    for cl in cl_data_sorted[:, 0:2]:
+        if cl[1] == action:
+            cl_id = int(cl[0])
+            cl_id_list.append(cl_id)
+    visualize_cl(cl_id_list)
+
+
+# visualize_promisinng_cf()
 # visualize_promising_cl()
+visualize_all_cl(0)
 
 print('done')
