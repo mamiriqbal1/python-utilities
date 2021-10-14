@@ -4,11 +4,8 @@ from PIL import Image, ImageDraw
 total_images = 1984
 img_width = 28
 resize_factor = 10
-# base_path = '../XCS-IMG/cmake-build-debug/output-2-digit/2-digits-14/'
-# image_file_path = "../XCS-IMG/data/mnist/mnist_validation_0_6.txt"
-# visualization_file_path: str = base_path + 'visualization.txt'
-# filter_file_path = base_path + '940785/filter.txt'
-base_path = '../remote/output/XCS-IMG/output-2-digit/2-digits-02/879824/'
+base_path = '../XCS-IMG/cmake-build-release/output-2-digit/2-digits-07/799840/'
+# base_path = '../remote/output/XCS-IMG/output-2-digit/2-digits-02/879824/'
 filter_file_path = base_path + '/filter.txt'
 cf_file_path = base_path + '/code_fragment.txt'
 cl_file_path = base_path + '/classifier.txt'
@@ -189,6 +186,6 @@ def visualize_all_cl(action):
 
 # visualize_promisinng_cf()
 # visualize_promising_cl()
-visualize_all_cl(0)
+visualize_all_cl(1)
 
 print('done')
