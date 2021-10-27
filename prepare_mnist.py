@@ -66,6 +66,28 @@ def prepare_mnist_digits(out_path, digits, postfix):
     np.savetxt(out_path + 'mnist_test' + postfix + '.txt', np.hstack((x_test, np.reshape(y_test, (-1, 1)))))
 
 
+def prepare_mnist_encoded(data_path, label_path, out_path):
+    data = np.loadtxt(data_path)
+    label = np.loadtxt(label_path)
+    label = np.reshape(label, (label.shape[0], 1))
+    encoded_mnist = np.concatenate((data, label), axis=1)
+    np.savetxt(out_path, encoded_mnist)
+    print('done')
+
+
+
+height = 7
+width = 7
+in_base_path = '../autoencoder/data/mnist/'
+data_file_name = 'train_encoded_mnist.txt'
+label_file_name = 'train_label_mnist.txt'
+data_path = in_base_path + data_file_name
+label_path = in_base_path + label_file_name
+out_base_path = '../XCS-IMG/data/mnist/'
+out_file_name = 'mnist_train_encoded7x7.txt'
+out_path = out_base_path + out_file_name
+prepare_mnist_encoded(data_path, label_path, out_path)
+
 # prepare_mnist_digits('../data/mnist/', [0, 6], '_0_6')
 # prepare_mnist_digits('../data/mnist/', [3, 8], '_3_8')
 # prepare_mnist_digits('../data/mnist/', [3, 8, 5, 6], '_3_8_5_6')
@@ -74,4 +96,4 @@ def prepare_mnist_digits(out_path, digits, postfix):
 
 #prepare_mnist_3_8('../data/mnist/')
 
-prepare_mnist_all('../data/mnist/')
+# prepare_mnist_all('../data/mnist/')
