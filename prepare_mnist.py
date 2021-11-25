@@ -7,6 +7,9 @@ def prepare_mnist_all(out_path):
     # reshape
     x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
     x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
+    # add labels as last column
+    x_train = np.hstack((x_train, np.reshape(y_train, (-1, 1))))
+    x_test = np.hstack((x_test, np.reshape(y_test, (-1, 1))))
 
     np.savetxt(out_path + 'mnist_train.txt', x_train, fmt='%1d')
     np.savetxt(out_path + 'mnist_test.txt', x_test, fmt='%1d')

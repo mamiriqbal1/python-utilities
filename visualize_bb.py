@@ -2,10 +2,10 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 # total_images = 1984
-img_width = 40
-img_height = 60
+img_width = 28
+img_height = 28
 resize_factor = 10
-base_path = '../XCS-IMG/cmake-build-release/output-fei-1/fei-1-04/9900'
+base_path = '../XCS-IMG/cmake-build-release/output-mnist/mnist-02/60000'
 # base_path = '../remote/output/XCS-IMG/output-10-digit/10-digits-07/3800000'
 filter_file_path = base_path + '/filter.txt'
 cf_file_path = base_path + '/code_fragment.txt'
@@ -13,8 +13,8 @@ cl_file_path = base_path + '/classifier.txt'
 max_condition_length = 25
 visualization_file_path = base_path + '/visualization.txt'
 
-# image_file_path = '../XCS-IMG/data/mnist/mnist_train_3_8.txt'
-image_file_path = '../XCS-IMG/data/fei_1/fei_1_train.txt'
+image_file_path = '../XCS-IMG/data/mnist/mnist_test.txt'
+# image_file_path = '../XCS-IMG/data/fei_1/fei_1_train.txt'
 
 img_file = np.loadtxt(image_file_path)
 
@@ -243,9 +243,9 @@ def show_original_image(img_id):
 
 # visualize_cl([1892])
 # visualize_promisinng_cf()
-visualize_promising_cl()
+# visualize_promising_cl()
 # visualize_all_cl(1)
-# visualize_action_set()
+visualize_action_set()
 # visualize_cf([3868])
 # show_original_image(9107)
 
