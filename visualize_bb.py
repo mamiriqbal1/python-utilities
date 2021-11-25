@@ -1,18 +1,20 @@
 import numpy as np
 from PIL import Image, ImageDraw
 
-total_images = 1984
-img_width = 28
+# total_images = 1984
+img_width = 40
+img_height = 60
 resize_factor = 10
-# base_path = '../XCS-IMG/cmake-build-release/output-2-digit/2-digits-93*/419916'
-base_path = '../remote/output/XCS-IMG/output-2-digit/2-digits-04/999800'
+base_path = '../XCS-IMG/cmake-build-release/output-fei-1/fei-1-04/9900'
+# base_path = '../remote/output/XCS-IMG/output-10-digit/10-digits-07/3800000'
 filter_file_path = base_path + '/filter.txt'
 cf_file_path = base_path + '/code_fragment.txt'
 cl_file_path = base_path + '/classifier.txt'
 max_condition_length = 25
 visualization_file_path = base_path + '/visualization.txt'
 
-image_file_path = '../XCS-IMG/data/mnist/mnist_validation_3_8.txt'
+# image_file_path = '../XCS-IMG/data/mnist/mnist_train_3_8.txt'
+image_file_path = '../XCS-IMG/data/fei_1/fei_1_train.txt'
 
 img_file = np.loadtxt(image_file_path)
 
@@ -29,7 +31,7 @@ def get_image(img_id, denormalize):
 
 
 def get_blank_image(val):
-    data = np.zeros((img_width, img_width))
+    data = np.zeros((img_height, img_width))
     data += val
     return data
 
@@ -63,7 +65,7 @@ def load_cl_data():
 
 load_cl_data()
 cl_data_sorted = sorted(list(cl_data.values()), key=lambda tup: tup[2], reverse=True)
-cl_data_sorted = np.array(cl_data_sorted)
+cl_data_sorted = np.array(cl_data_sorted, dtype=object)
 
 cf_data = {}
 def load_cf_data():
@@ -93,7 +95,7 @@ def load_cf_data():
 
 load_cf_data()
 cf_data_sorted = sorted(list(cf_data.values()), key=lambda tup: tup[2], reverse=True)
-cf_data_sorted = np.array(cf_data_sorted)
+cf_data_sorted = np.array(cf_data_sorted, dtype=object)
 
 
 visualization_data = {}
@@ -120,7 +122,7 @@ def load_visualization_data():
     f.close()
 
 
-# load_visualization_data()
+load_visualization_data()
 
 
 def update_pixel_data(img_sum, img_count, cf_id):
@@ -140,7 +142,7 @@ def get_pixel_color(img_sum, img_count, x, y):
 
 
 def visualize_intervals(img_sum, img_count, dc):
-    for y in range(img_width):
+    for y in range(img_height):
         for x in range(img_width):
             dc.point((x, y), get_pixel_color(img_sum, img_count, x, y))
 
@@ -152,24 +154,27 @@ def get_concat_h(im1, im2):
     return dst
 
 
-def visualize_cf(cf_id_list):
+def visualize_cf(cf_id_list, original_img=None):
     print('Code Fragments: (' + str(len(cf_id_list)) + ') ' + str(cf_id_list))
     # initialize bounds to see if they are updated lower = 1, upper = 0
     img_sum = get_blank_image(0)
     img_count = get_blank_image(0)
-    base_img = Image.new("RGB", (img_width, img_width), "#000000")
+    base_img = Image.new("RGB", (img_width, img_height), "#000000")
     dc = ImageDraw.Draw(base_img)  # draw context
     for cf_id in cf_id_list:
         cf_id, cf_num, cf_fit, cf_x, cf_y, cf_size_x, cf_size_y, pattern = cf_data[cf_id]
         update_pixel_data(img_sum, img_count, cf_id)
 
     visualize_intervals(img_sum, img_count, dc)
-    base_img = base_img.resize((img_width * resize_factor, img_width * resize_factor))
-    base_img.show()
+    base_img = base_img.resize((img_width * resize_factor, img_height * resize_factor))
+    all_img = base_img
+    if original_img is not None:
+        all_img = get_concat_h(base_img, original_img)
+    all_img.show()
     input("press any key to continue")
 
 
-def visualize_cl(cl_ids):
+def visualize_cl(cl_ids, original_img=None):
     print('Classifiers: (' + str(len(cl_ids)) + ') ' + str(cl_ids))
     cf_id_list = []
     for cl_id in cl_ids:
@@ -178,7 +183,7 @@ def visualize_cl(cl_ids):
         #     continue
         for cf_id in cl_data[cl_id][8]:
             cf_id_list.append(cf_id)
-    visualize_cf(cf_id_list)
+    visualize_cf(cf_id_list, original_img)
 
 
 def visualize_promisinng_cf():
@@ -209,18 +214,17 @@ def filter_cls(cl_ids):
     filtered_ids = []
     for cl_id in cl_ids:
         # if promising and cl_data[cl_id][7] >= 10 or cl_data[cl_id][4] < 10:
-        if cl_data[cl_id][2] >= 0.01:
+        if cl_data[cl_id][2] >= 0.1:
             filtered_ids.append(cl_id)
     return filtered_ids
 
 
-def display_image(img_id):
+def get_original_image(img_id):
     digit, image = get_image(img_id, True)
     image = np.copy(image)
     original_image = Image.fromarray(image).convert("RGB")
-    original_image = original_image.resize((img_width * resize_factor, img_width * resize_factor))
-    original_image.show()
-
+    original_image = original_image.resize((img_width * resize_factor, img_height* resize_factor))
+    return original_image
 
 
 def visualize_action_set():
@@ -228,14 +232,21 @@ def visualize_action_set():
     for img_id in visualization_data.keys():
         actual_class, predicted_class, cl_ids = visualization_data[img_id]
         print('Image: ' + str(img_id) + ' Actual: ' + str(actual_class) + ' Predicted: ' + str(predicted_class))
-        cl_ids = filter_cls(cl_ids)
-        display_image(img_id)
-        visualize_cl(cl_ids)
+        # cl_ids = filter_cls(cl_ids)
+        visualize_cl(cl_ids, get_original_image(img_id))
 
 
+def show_original_image(img_id):
+    img = get_original_image(img_id)
+    img.show()
+
+
+# visualize_cl([1892])
 # visualize_promisinng_cf()
 visualize_promising_cl()
 # visualize_all_cl(1)
 # visualize_action_set()
+# visualize_cf([3868])
+# show_original_image(9107)
 
 print('done')
