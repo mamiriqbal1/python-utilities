@@ -6,17 +6,10 @@ def prepare_mnist_all(out_path):
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     # reshape
     x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
-    # split training set by extracting same number of validation instances as test
-    x_train, x_validation, y_train, y_validation = train_test_split(x_train, y_train, test_size=y_test.size)
     x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
-    # normalize between 0 and 1
-    # x_train = (x_train - x_train.min()) / (x_train.max() - x_train.min())
-    # x_validation = (x_validation - x_validation.min()) / (x_validation.max() - x_validation.min())
-    # x_test = (x_test - x_test.min()) / (x_test.max() - x_test.min())
 
-    np.savetxt(out_path + 'mnist_train_all_integer.txt', np.hstack((x_train, np.reshape(y_train, (-1, 1)))), fmt='%1d')
-    np.savetxt(out_path + 'mnist_validation_all_integer.txt', np.hstack((x_validation, np.reshape(y_validation, (-1, 1)))), fmt='%1d')
-    np.savetxt(out_path + 'mnist_test_all_integer.txt', np.hstack((x_test, np.reshape(y_test, (-1, 1)))), fmt='%1d')
+    np.savetxt(out_path + 'mnist_train.txt', x_train, fmt='%1d')
+    np.savetxt(out_path + 'mnist_test.txt', x_test, fmt='%1d')
 
 
 def prepare_mnist_digits(out_path, digits, postfix):
